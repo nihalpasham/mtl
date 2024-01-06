@@ -1,13 +1,13 @@
 # mtl-rs
 A playground for experimenting with the metal-rs bindings
 
-## Available compute kernels 
+### Available compute kernels 
 - dotprod (ushort Vs. half type impls).
-- matrixmul
+- matmul (wip)
 
-## Usage
+### Usage
 
-Launching metal compute kernel involves 2 steps. 
+Launching a metal `compute` kernel is a 2 step process. 
 
 ```sh
 # every kernel is self contained i.e. is its own crate. Simply `cd` into a kernel's directory and run
@@ -20,7 +20,7 @@ xcrun -sdk macosx metallib ./src/metal/matrixprod.air -o ./src/metal/matrixprod.
 # lastly, run the rust binary to launch the kernel and examine its output.
 cargo run
 ```
-## Example output for dotprod
+### Example output for dotprod
 
 ```sh
 cargo run
