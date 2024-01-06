@@ -52,7 +52,7 @@ Dotprod on CPU - parallel
 Dotprod on GPU
       Actual time spent performing dotprod on GPU
           Done in 869.25µs
-      Total time taken - 2.25ms (includes kernel launch and result retreival)
+      Total time taken - 2.25ms (includes kernel launch and result retreival) # interesting, looks like metal reuses most objects or resources instantiated from the previous dispatch call (i.e. device, queue etc.). 
 
 *** verify that all 3 ops produce the same result ***
 cpu:     [0.72802734, 0.0037574768, 0.0947876, 0.16601563, 0.26367188], [0.31933594, 0.2919922, 0.12042236, 0.20458984, 0.30151367]
