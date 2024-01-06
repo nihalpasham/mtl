@@ -1,9 +1,15 @@
 use core::{panic, slice};
-use std::{mem::{transmute, self}, ops::Mul, time::Instant};
+use std::{
+    mem::{self, transmute},
+    ops::Mul,
+    time::Instant,
+};
 
+use half::f16;
 use metal::{Device, MTLResourceOptions, MTLSize};
 use rand::Rng;
 use rayon::prelude::*;
+use separator::Separatable;
 
 const LIB_DATA: &[u8] = include_bytes!("./shaders/dotprod.metallib");
 
@@ -38,8 +44,7 @@ pub fn dotprod<U: Mul<Output = U> + Copy>(a: &Vec<U>, b: &Vec<U>, kernel: Kernel
                 size,
                 MTLResourceOptions::StorageModeShared,
             );
-            gpu_buffer_res =
-                device.new_buffer(size, MTLResourceOptions::StorageModeShared);
+            gpu_buffer_res = device.new_buffer(size, MTLResourceOptions::StorageModeShared);
         }
         false => {
             panic!("cant compute dotprod for vectors of different lengths")
@@ -99,7 +104,7 @@ pub fn dotprod<U: Mul<Output = U> + Copy>(a: &Vec<U>, b: &Vec<U>, kernel: Kernel
     slice.to_vec()
 }
 
-/// Perform a straightforward dotprod on a cpu. This is much a for loop that sequentially iterates through each element.
+/// Perform a straightforward dotprod on a cpu. This is a for loop that sequentially iterates through each element.
 pub fn run_cpu<U: Mul<Output = U> + Copy>(a: &Vec<U>, b: &Vec<U>) -> Vec<U> {
     println!("Dotprod on CPU");
     let instant = Instant::now();
@@ -129,7 +134,7 @@ pub fn run_gpu<U: Mul<Output = U> + Copy>(a: &Vec<U>, b: &Vec<U>, kernel: &str) 
     let instant = Instant::now();
     let res = dotprod(a, b, kernel_hostname);
     println!(
-        "      Total time taken in {:.2?} (includes kernel launch and result retreival)",
+        "      Total time taken - {:.2?} (includes kernel launch and result retreival)",
         instant.elapsed()
     );
     res
@@ -147,9 +152,51 @@ fn main() {
         .map(|_| (rng.gen_range(0..32u16)))
         .collect::<Vec<u16>>();
 
+    println!(
+        "\n____*** vector dotprod of {} elements of type `ushort` ***___\n",
+        num_elems.separated_string()
+    );
     let cpu = run_cpu(&a, &b);
     let cpu_par = run_cpu_par(&a, &b);
     let gpu = run_gpu(&a, &b, "dotprod_ushort");
+
+    println!("\n*** verify that all 3 ops produce the same result ***");
+    println!(
+        "cpu:     {:?}, {:?}",
+        &cpu[0..5],
+        &cpu[num_elems - 5..num_elems]
+    );
+    println!(
+        "cpu_par: {:?}, {:?}",
+        &cpu_par[0..5],
+        &cpu_par[num_elems - 5..num_elems]
+    );
+    println!(
+        "gpu:     {:?}, {:?}",
+        &gpu[0..5],
+        &gpu[num_elems - 5..num_elems]
+    );
+
+    // measurements for the f16 type
+
+    let a = (0..num_elems)
+        .into_iter()
+        .map(|_| (rng.gen_range(0.0..1.0f32)))
+        .map(|a| half::f16::from_f32(a))
+        .collect::<Vec<f16>>();
+    let b = (0..num_elems)
+        .into_iter()
+        .map(|_| (rng.gen_range(0.0..1.0f32)))
+        .map(|b| half::f16::from_f32(b))
+        .collect::<Vec<f16>>();
+
+    println!(
+        "\n____*** vector dotprod of {} elements of type `f16` ***___\n",
+        num_elems.separated_string()
+    );
+    let cpu = run_cpu(&a, &b);
+    let cpu_par = run_cpu_par(&a, &b);
+    let gpu = run_gpu(&a, &b, "dotprod_half");
 
     println!("\n*** verify that all 3 ops produce the same result ***");
     println!(
