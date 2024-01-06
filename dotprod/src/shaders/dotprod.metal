@@ -14,7 +14,7 @@ kernel void dotprod(constant T *arrayA [[buffer(0)]],
 }
 
 // function specialization. Metal doesn't support generic templates at runtime. 
-// You need to explicitly instantiate the template for the specific data type you'll use (e.g., float or uint).
+// You need to explicitly instantiate the template for the specific data type you'll use (e.g., half or uint).
 template [[host_name("dotprod_ushort")]] kernel void dotprod<ushort, uint>(constant ushort *, constant ushort *, device ushort *, uint);
 template [[host_name("dotprod_half")]] kernel void dotprod<half, uint>(constant half *, constant half *, device half *, uint);
 

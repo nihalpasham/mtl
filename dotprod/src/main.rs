@@ -26,18 +26,18 @@ pub fn dotprod<U: Mul<Output = U> + Copy>(a: &Vec<U>, b: &Vec<U>, kernel: Kernel
 
     match a.len() == b.len() {
         true => {
+            let len = a.len() as u64;
+            let size = len * mem::size_of::<U>() as u64;
             gpu_buffer_a = device.new_buffer_with_data(
                 unsafe { transmute(a.as_ptr()) },
-                a.len() as u64,
+                size,
                 MTLResourceOptions::StorageModeShared,
             );
             gpu_buffer_b = device.new_buffer_with_data(
                 unsafe { transmute(b.as_ptr()) },
-                b.len() as u64,
+                size,
                 MTLResourceOptions::StorageModeShared,
             );
-            let len = a.len() as u64;
-            let size = len * mem::size_of::<U>() as u64;
             gpu_buffer_res =
                 device.new_buffer(size, MTLResourceOptions::StorageModeShared);
         }
