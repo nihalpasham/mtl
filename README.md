@@ -23,6 +23,22 @@ cargo run
 ## Example output for dotprod
 
 ```sh
+cargo run
+   Compiling mtl v0.1.0 (/Users/nihal.pasham/devspace/metal/mtl/dotprod)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.18s
+     Running `target/debug/mtl`
+Dotprod on CPU
+      Done in 15.47ms
+Dotprod on CPU - parallel
+      Done in 3.06ms
+Dotprod on GPU
+      Actual time spent performing dotprod on GPU
+          Done in 1.50ms
+      Total time taken in 30.86ms (includes kernel launch and result retreival)
 
+*** verify that all 3 ops produce the same result ***
+cpu:     [0, 372, 36, 248, 18], [500, 98, 750, 464, 98]
+cpu_par: [0, 372, 36, 248, 18], [500, 98, 750, 464, 98]
+gpu:     [0, 372, 36, 248, 18], [7056, 1127, 2420, 5808, 6912]
 ```
 
