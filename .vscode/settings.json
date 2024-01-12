@@ -1,5 +1,6 @@
 {
     "rust-analyzer.linkedProjects": [
-        "./dotprod/Cargo.toml"
+        "./dotprod/Cargo.toml",
+        "./matmul/Cargo.toml"
     ]
 }
