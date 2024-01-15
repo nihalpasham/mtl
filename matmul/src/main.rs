@@ -5,15 +5,15 @@ use std::{
     time::Instant,
 };
 
-// use half::f16;
+use half::f16;
 use metal::{Device, MTLResourceOptions, MTLSize};
 use rand::Rng;
 use separator::Separatable;
 
 const LIB_DATA: &[u8] = include_bytes!("./shaders/matmul.metallib");
 
-const M_ROWS: usize = 1024;
-const M_COLS: usize = 1024;
+const MTX_WIDTH: usize = 1024;
+const MTX_HEIGHT: usize = 1024;
 
 /// Kernel hostnames
 pub enum Kernels<'a> {
@@ -185,10 +185,11 @@ pub fn matmul<U: Mul<Output = U> + Copy>(
     Matrix::new(a.rows, b.cols, elems)
 }
 
-/// Launch a dotprod kernel on the GPU.
+/// Launch a matmul kernel on the GPU.
 pub fn run_gpu<U: Mul<Output = U> + Copy>(a: &Matrix<U>, b: &Matrix<U>, kernel: &str) -> Matrix<U> {
     let kernel_hostname = match kernel {
-        "simple_matmul" => Kernels::SimpleMatMul(kernel),
+        "matmul_w_half" => Kernels::SimpleMatMul(kernel),
+        "matmul_w_u16" => Kernels::SimpleMatMul(kernel),
         _ => unimplemented!(),
     };
     println!("Matmul on GPU");
@@ -202,38 +203,38 @@ pub fn run_gpu<U: Mul<Output = U> + Copy>(a: &Matrix<U>, b: &Matrix<U>, kernel: 
 }
 
 fn main() {
-    let m_rows = M_ROWS;
-    let m_cols = M_COLS;
+    let m_rows = MTX_WIDTH;
+    let m_cols = MTX_HEIGHT;
     let mtx_size = m_rows * m_cols;
     let mut rng = rand::thread_rng();
     let a = (0..mtx_size)
         .into_iter()
-        .map(|_| (rng.gen_range(0..10)))
-        // .map(|a| half::f16::from_f32(a))
-        .collect::<Vec<u32>>();
+        .map(|_| (rng.gen_range(0.0..1.0)))
+        .map(|a| half::f16::from_f32(a))
+        .collect::<Vec<f16>>();
     let b = (0..mtx_size)
         .into_iter()
-        .map(|_| (rng.gen_range(0..10)))
-        // .map(|b| half::f16::from_f32(b))
-        .collect::<Vec<u32>>();
-    println!("a: {:?}, {:?}", &a[..5], &a[mtx_size -5 ..mtx_size]);
-    println!("b: {:?}, {:?}", &b[..5], &b[mtx_size -5 ..mtx_size]);
+        .map(|_| (rng.gen_range(0.0..1.0)))
+        .map(|b| half::f16::from_f32(b))
+        .collect::<Vec<f16>>();
     let mtx_a = Matrix::new(m_rows, m_cols, a.as_slice());
     let mtx_b = Matrix::new(m_rows, m_cols, b.as_slice());
-
+    
+    println!("a: {:?}, {:?}", &a[..5], &a[mtx_size - 5..mtx_size]);
+    println!("b: {:?}, {:?}", &b[..5], &b[mtx_size - 5..mtx_size]);
     println!(
-    "\n____*** matrix multiplication - matrices of `width {} x height {}` elements of type `u32` ***___\n",
-    m_rows.separated_string(), m_cols.separated_string()
+    "\n____*** matrix multiplication - matrices of `width {} x height {}` elements of type `{}` ***___\n",
+    m_rows.separated_string(), m_cols.separated_string(), std::any::type_name::<f16>(),
 );
 
-    let gpu = run_gpu(&mtx_a, &mtx_b, "simple_matmul");
+    let gpu = run_gpu(&mtx_a, &mtx_b, "matmul_w_half");
 
     println!("Matmul on CPU");
     let instant = Instant::now();
     let cpu = mtx_a * mtx_b;
     println!("      Done in - {:.2?}", instant.elapsed());
 
-    println!("\n*** verify cpu & gpu produce the same result ***");
+    println!("\n____*** verify cpu & gpu produce the same result ***____\n");
     println!(
         "cpu:     {:?}, {:?}",
         &cpu.elems[0..5],
