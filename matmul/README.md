@@ -36,11 +36,9 @@ ____*** verify cpu & gpu produce the same result ***____
 cpu:     [259.5, 246.0, 251.625, 249.125, 258.75], [248.625, 237.75, 257.5, 248.0, 259.0]
 gpu:     [259.5, 246.125, 251.875, 248.875, 258.5], [248.625, 237.75, 257.5, 248.125, 258.75]
 ```
-### GPU Vs. CPU speedup:
+### GPU speedup using a naive implementation:
 
-```math
-(29.44s * 1000)ms \over 49.45ms \right = \left 595.35
-```
+$$(29.44 * 1000/49.45) = 595.35$$ 
 
 ### Precision and variance
 
