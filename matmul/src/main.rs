@@ -160,8 +160,8 @@ pub fn matmul<U: Mul<Output = U> + Copy>(
     let threads_per_threadgroup = compute_pipeline.max_total_threads_per_threadgroup(); // threads per threadgroup
 
     // calculate threads per grid
-    let grid_width = (a.elems.len() / 1024) as u64; // use for 2d grid of threads
-    let grid_height = (a.elems.len() / 1024) as u64; // use for 2d grid of threads
+    let grid_width = (a.elems.len() / MTX_WIDTH) as u64; // use for 2d grid of threads
+    let grid_height = (a.elems.len() / MTX_HEIGHT) as u64; // use for 2d grid of threads
 
     let threads_per_grid = MTLSize::new(grid_width, grid_height, 1);
     let threads_per_thread_group = MTLSize::new(
