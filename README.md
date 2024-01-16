@@ -1,9 +1,9 @@
 # mtl-rs
-A playground for experimenting with the metal-rs bindings
+A playground for experimenting with Apple silicon GPUs and metal-rs bindings
 
 ### Available compute kernels 
 - dotprod (ushort Vs. half type impls).
-- matmul (wip)
+- matmul (f16 Vs. u16 type impls)
 
 ### Usage
 
