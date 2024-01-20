@@ -17,28 +17,37 @@ cargo run
 
 ```sh
    Compiling matmul v0.1.0 (/Users/nihal.pasham/devspace/metal/mtl/matmul)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.15s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.16s
      Running `target/debug/matmul`
-a: [0.41870117, 0.0039863586, 0.22045898, 0.9082031, 0.7939453], [0.39648438, 0.1005249, 0.6303711, 0.5258789, 0.2286377]
-b: [0.40527344, 0.6220703, 0.089416504, 0.25561523, 0.6484375], [0.14367676, 0.43969727, 0.5385742, 0.15527344, 0.0692749]
+a: [0.33935547, 0.010612488, 0.7109375, 0.9404297, 0.6191406], [0.5522461, 0.9848633, 0.55859375, 0.95214844, 0.39819336]
+b: [0.17114258, 0.051330566, 0.33325195, 0.85546875, 0.38232422], [0.34301758, 0.9003906, 0.41357422, 0.08544922, 0.6113281]
 
 ____*** matrix multiplication - matrices of `width 1,024 x height 1,024` elements of type `half::binary16::f16` ***___
 
-Matmul on GPU
+Naive Matmul on GPU
       Actual time spent performing matmul on GPU
-          Done in 49.45ms
-      Total time taken - 97.03ms (includes kernel launch and result retreival)
-Matmul on CPU
-      Done in - 29.44s
+          Done in 46.40ms
+      Total time taken - 76.89ms (includes kernel launch and result retreival)
+Tiled Matmul on GPU
+      Actual time spent performing matmul on GPU
+          Done in 5.87ms
+      Total time taken - 7.21ms (includes kernel launch and result retreival)
+Naive Matmul on CPU
+      Done in - 29.43s
 
 ____*** verify cpu & gpu produce the same result ***____
 
-cpu:     [259.5, 246.0, 251.625, 249.125, 258.75], [248.625, 237.75, 257.5, 248.0, 259.0]
-gpu:     [259.5, 246.125, 251.875, 248.875, 258.5], [248.625, 237.75, 257.5, 248.125, 258.75]
+cpu_naive:     [263.0, 256.0, 260.25, 256.25, 257.25], [251.625, 244.5, 247.5, 250.25, 243.0]
+gpu_naive:     [263.0, 256.0, 260.25, 256.25, 257.25], [251.875, 244.625, 247.5, 250.125, 243.0]
+gpu_tiled:     [263.0, 256.0, 260.25, 256.25, 257.25], [251.875, 244.625, 247.5, 250.125, 243.0]
 ```
-### GPU speedup using a naive implementation:
+### GPU speedup Vs. CPU using a naive implementation:
 
-$$(29.44 * 1000/49.45) = 595.35$$ 
+$$(29.43 * 1000/46.40) = 634.26$$ 
+
+### Tiled GPU speedup Vs. GPU using a naive implementation:
+
+$$(46.40/5.87) = 7.90$$ 
 
 ### Precision and variance
 

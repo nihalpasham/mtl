@@ -187,12 +187,13 @@ pub fn matmul<U: Mul<Output = U> + Copy>(
 
 /// Launch a matmul kernel on the GPU.
 pub fn run_gpu<U: Mul<Output = U> + Copy>(a: &Matrix<U>, b: &Matrix<U>, kernel: &str) -> Matrix<U> {
-    let kernel_hostname = match kernel {
-        "matmul_w_half" => Kernels::SimpleMatMul(kernel),
-        "matmul_w_u16" => Kernels::SimpleMatMul(kernel),
+    let (kernel_hostname, log) = match kernel {
+        "matmul_w_half" => (Kernels::SimpleMatMul(kernel), "Naive"),
+        "matmul_w_u16" => (Kernels::SimpleMatMul(kernel), "Naive"),
+        "tiled_matmul" => (Kernels::TiledMatMul(kernel), "Tiled"),
         _ => unimplemented!(),
     };
-    println!("Matmul on GPU");
+    println!("{} Matmul on GPU", log);
     let instant = Instant::now();
     let res = matmul(a, b, kernel_hostname);
     println!(
@@ -227,22 +228,28 @@ fn main() {
     m_rows.separated_string(), m_cols.separated_string(), std::any::type_name::<f16>(),
 );
 
-    let gpu = run_gpu(&mtx_a, &mtx_b, "matmul_w_half");
+    let gpu_naive = run_gpu(&mtx_a, &mtx_b, "matmul_w_half");
+    let gpu_tiled = run_gpu(&mtx_a, &mtx_b, "tiled_matmul");
 
-    println!("Matmul on CPU");
+    println!("Naive Matmul on CPU");
     let instant = Instant::now();
     let cpu = mtx_a * mtx_b;
     println!("      Done in - {:.2?}", instant.elapsed());
 
     println!("\n____*** verify cpu & gpu produce the same result ***____\n");
     println!(
-        "cpu:     {:?}, {:?}",
+        "cpu_naive:     {:?}, {:?}",
         &cpu.elems[0..5],
         &cpu.elems[mtx_size - 5..mtx_size]
     );
     println!(
-        "gpu:     {:?}, {:?}",
-        &gpu.elems[0..5],
-        &gpu.elems[mtx_size - 5..mtx_size]
+        "gpu_naive:     {:?}, {:?}",
+        &gpu_naive.elems[0..5],
+        &gpu_naive.elems[mtx_size - 5..mtx_size]
+    );
+    println!(
+        "gpu_tiled:     {:?}, {:?}",
+        &gpu_tiled.elems[0..5],
+        &gpu_tiled.elems[mtx_size - 5..mtx_size]
     );
 }
