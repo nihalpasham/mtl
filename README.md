@@ -3,7 +3,7 @@ A playground for experimenting with Apple silicon GPUs and metal-rs bindings
 
 ### Available compute kernels 
 - dotprod (ushort Vs. half impls).
-- matmul (f16 Vs. u16 impls)
+- matmul (naive Vs. tiled impls)
 
 ### Usage
 

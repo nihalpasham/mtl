@@ -23,8 +23,8 @@ kernel void simple_matmul(constant T *matrixA [[buffer(0)]],
     //      - col 6 of matrixB and
     //      - computes the sum of the products
     // essentially each thread produces one element of matrixC i.e (3,6)
-    uint row = thread_pos_in_grid.x;
-    uint col = thread_pos_in_grid.y;
+    uint row = thread_pos_in_grid.y;
+    uint col = thread_pos_in_grid.x;
     // calculate grid size
     uint n = grid_size.x;
     // initialize (row, col) element in matrixC to zero.
@@ -58,7 +58,7 @@ template [[host_name("matmul_w_u16")]] kernel void simple_matmul<ushort, uint2>(
 constant ushort SHARED_MEM = 1 << 10;
 
 // Performs a tiled matmul using a 2d grid of threads.
-// Note: this example uses 32 x 32 threadgroups.
+// Note: this example uses 32 x 32 threadgroups and 32 x 32 threads per threadgroup
 kernel void tiled_matmul(constant half *matrixA [[buffer(0)]],
                          constant half *matrixB [[buffer(1)]],
                          device half *matrixC [[buffer(2)]],
@@ -78,6 +78,7 @@ kernel void tiled_matmul(constant half *matrixA [[buffer(0)]],
     // statically allocate threadgroup memory to store tile A and tile B.
     // Although, this looks like each thread performs its own allocation.
     // that is *not* the case. Its a single allocation for a given threadgroup.
+    // Note: tile dimensions are 32 x 32
     threadgroup half tile_a[SHARED_MEM];
     threadgroup half tile_b[SHARED_MEM];
     // rename variables
@@ -88,20 +89,25 @@ kernel void tiled_matmul(constant half *matrixA [[buffer(0)]],
 
     // temporary accumulator
     half tmp = 0;
-    // Each thread in a threadgroup loads an element (from A) and an element (from B) into the
-    // allocated shared tile (i.e. threadgroup) memory.
+    // this thread iterates 
+    //      - horizontally over tiles in matrixA and
+    //      - vertically over tiles in matrixB
+    //
+    // idx here represents a single tile.
     for (uint idx = 0; idx < n; idx += blockDimx)
     {
-        // in every iteration, threads in a threadgroup load 2 tiles - 
-        //      - from matrixA into tile_a (horizontally) and
-        //      - from matrixB into tile_b (vertically)
+        // Each thread in a threadgroup loads an element from matrixA and an element from matrixB into the
+        // allocated shared tile (i.e. threadgroup) memory.
+        // in every iteration, threads in a threadgroup load elements into 2 tiles - 
+        //      - elements from matrixA into tile_a (horizontally) and
+        //      - elements from matrixB into tile_b (vertically)
         tile_a[threadIDy * blockDimx + threadIDx] = matrixA[row * n + idx + threadIDx];
         tile_b[threadIDy * blockDimx + threadIDx] = matrixB[idx * n + (threadIDy * n) + col];
         // wait till every thread in a given threadgroup loads its element before we compute the partial
         // dot products. This is an embarrassingly parallel operation.
         threadgroup_barrier(mem_flags::mem_threadgroup);
 
-        // We perform a partial matmul using the loaded tiles, in each thread. 
+        // Each thread performs a partial matmul with the loaded tiles. 
         // More precisely, this thread performs the dotprod on a single row (from tile_a) and column 
         // (from tile_b) and writes the value to tmp
         for (uint elem = 0; elem < blockDimx; elem++)
